@@ -135,8 +135,8 @@ export async function fetchVendors(): Promise<{
   vendors: Vendor[]
   owners: VendorUser[]
 }> {
+  // Authenticated so LGU admin can receive owner assignments (public populate strips them).
   const rows = await apiFetchAll<StrapiVendor>('/vendors', {
-    auth: false,
     query: {
       'populate[branch]': 'true',
       'populate[owner]': 'true',
@@ -296,7 +296,7 @@ export async function createVendorAccount(input: {
   phone: string
   password: string
   vendorIds: string[]
-}): Promise<VendorUser> {
+}): Promise<VendorUser & { vendorIds: string[] }> {
   const payload = await apiRequest<{
     data: {
       documentId: string
@@ -323,5 +323,6 @@ export async function createVendorAccount(input: {
     phone: payload.data.phone ?? input.phone,
     password: '',
     isActive: true,
+    vendorIds: payload.data.vendorIds ?? input.vendorIds,
   }
 }

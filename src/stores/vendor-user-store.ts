@@ -48,16 +48,43 @@ export const useVendorUserStore = create<VendorUserState>()(
             }
           }
           try {
-            const user = await createVendorAccount({
+            const created = await createVendorAccount({
               name,
               email,
               phone,
               password,
               vendorIds,
             })
+            const { vendorIds: assignedIds, ...user } = created
             set({ users: [user, ...get().users.filter((u) => u.id !== user.id)] })
-            const refreshed = await fetchVendors()
-            useVendorStore.setState({ vendors: refreshed.vendors })
+
+            // Apply ownership immediately, then refresh from API when available.
+            useVendorStore.setState((state) => ({
+              vendors: state.vendors.map((v) =>
+                assignedIds.includes(v.id)
+                  ? { ...v, ownerUserId: user.id }
+                  : v,
+              ),
+            }))
+            try {
+              const refreshed = await fetchVendors()
+              useVendorStore.setState({ vendors: refreshed.vendors })
+              if (refreshed.owners.length > 0) {
+                set((state) => {
+                  const byId = new Map(state.users.map((u) => [u.id, u]))
+                  for (const owner of refreshed.owners) {
+                    byId.set(owner.id, {
+                      ...byId.get(owner.id),
+                      ...owner,
+                      password: '',
+                    })
+                  }
+                  return { users: [...byId.values()] }
+                })
+              }
+            } catch {
+              // Keep the local ownership patch if catalog refresh fails.
+            }
             return { ok: true, user }
           } catch (error) {
             return {

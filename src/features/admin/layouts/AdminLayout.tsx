@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   ClipboardList,
   HandCoins,
   History,
   LayoutDashboard,
+  LogOut,
   MapPinned,
   Menu,
   MessageSquareHeart,
@@ -13,6 +14,7 @@ import {
   X,
   Wheat,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { FEATURE_TAWAD_ENABLED, PRICE_DISCLAIMER } from '@/constants'
 import { BrandMark } from '@/components/shared/BrandLogo'
 import {
@@ -22,6 +24,7 @@ import {
 import { SIDEBAR_SURFACE, sidebarLinkClass } from '@/components/shared/sidebar-styles'
 import { TextSizeControl } from '@/components/shared/TextSizeControl'
 import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth-store'
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/commodities', label: 'Commodities', icon: Wheat },
@@ -35,6 +38,16 @@ const links = [
 ].filter((link) => FEATURE_TAWAD_ENABLED || link.to !== '/admin/offers')
 
 function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const navigate = useNavigate()
+  const logout = useAuthStore((s) => s.logout)
+
+  function handleSignOut() {
+    onNavigate?.()
+    logout()
+    toast.success('Signed out')
+    navigate('/login', { replace: true })
+  }
+
   return (
     <aside className={SIDEBAR_SURFACE}>
       <SidebarBackdrop />
@@ -62,6 +75,16 @@ function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           </p>
           <TextSizeControl variant="inline" />
         </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full justify-start gap-2 text-white/80 hover:bg-white/10 hover:text-white"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
 
         <p className="px-3 text-[10px] leading-tight text-white/40">
           {PRICE_DISCLAIMER}
