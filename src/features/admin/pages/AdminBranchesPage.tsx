@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { MapPinPicker } from '@/components/shared/MapPinPicker'
 import { useBranchStore } from '@/stores/branch-store'
 import type { Branch, BranchFormInput } from '@/types'
 
@@ -65,6 +66,21 @@ function BranchFormFields({
           placeholder="Area / city"
         />
       </div>
+
+      <MapPinPicker
+        lat={form.lat}
+        lng={form.lng}
+        onChange={({ lat, lng }) => setForm({ ...form, lat, lng })}
+        onPlaceSelected={({ address, lat, lng }) =>
+          setForm({
+            ...form,
+            address: form.address.trim() ? form.address : address,
+            lat,
+            lng,
+          })
+        }
+      />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-lat`}>Pickup latitude</Label>
@@ -89,7 +105,7 @@ function BranchFormFields({
       </div>
       <p className="text-[11px] text-muted">
         Keri uses this palengke’s lat/lng as the pickup pin for every stall under
-        it.
+        it. Prefer the map; numbers stay editable as a fallback.
       </p>
       <div className="flex items-center gap-3">
         <Switch
@@ -131,12 +147,12 @@ function CreateBranchDialog() {
           Add palengke
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add palengke / market</DialogTitle>
           <DialogDescription>
-            Register a market branch. Vendors will be assigned here; lon/lat is
-            the Keri pickup point.
+            Register a market branch. Vendors will be assigned here; the map pin
+            is the Keri pickup point.
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
@@ -195,11 +211,11 @@ function EditBranchDialog({ branch }: { branch: Branch }) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit palengke</DialogTitle>
           <DialogDescription>
-            Update name, address, or Keri pickup coordinates.
+            Update name, address, or the Keri pickup pin on the map.
           </DialogDescription>
         </DialogHeader>
         <DialogBody>

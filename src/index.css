@@ -343,3 +343,8 @@
 .dialog-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Places suggestion list sits above page chrome. */
+.pac-container {
+  z-index: 10000;
+}
