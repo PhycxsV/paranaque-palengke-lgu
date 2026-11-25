@@ -113,6 +113,13 @@ export const useBranchStore = create<BranchState>()(
     }),
     {
       name: `${STORAGE_PREFIX}-branches`,
+      partialize: (state) =>
+        isApiConfigured() ? {} : { branches: state.branches },
+      merge: (persisted, current) => {
+        if (isApiConfigured()) return { ...current }
+        const p = persisted as Partial<{ branches: typeof current.branches }> | undefined
+        return { ...current, ...p }
+      },
     },
   ),
 )

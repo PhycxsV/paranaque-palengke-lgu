@@ -226,7 +226,8 @@ export function MapPinPicker({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <form className="space-y-1.5" onSubmit={runSearch}>
+      {/* Keep the search row above the map so suggestion clicks aren't stolen. */}
+      <form className="relative z-20 space-y-1.5" onSubmit={runSearch}>
         <Label htmlFor="map-pin-search" className="flex items-center gap-1.5">
           <Search className="h-3.5 w-3.5" />
           Find place
@@ -260,7 +261,7 @@ export function MapPinPicker({
 
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl border border-border bg-surface',
+          'relative z-0 overflow-hidden rounded-xl border border-border bg-surface',
           status === 'error' ? 'min-h-40' : 'min-h-56',
         )}
       >

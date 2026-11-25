@@ -27,10 +27,21 @@ export function DialogOverlay({
 const MOBILE_SHEET =
   'dialog-sheet max-sm:inset-x-0 max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:max-h-[90dvh] max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl max-sm:border-x-0 max-sm:border-b-0'
 
+function keepPlacesSuggestionClicks(
+  event: { target: EventTarget | null; preventDefault: () => void },
+) {
+  const target = event.target
+  if (target instanceof Element && target.closest('.pac-container')) {
+    event.preventDefault()
+  }
+}
+
 export function DialogContent({
   className,
   children,
   mobileSheet = false,
+  onInteractOutside,
+  onPointerDownOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   /** On phones, slide up from the bottom like a native sheet. */
@@ -46,6 +57,14 @@ export function DialogContent({
           className,
         )}
         {...props}
+        onInteractOutside={(event) => {
+          keepPlacesSuggestionClicks(event)
+          onInteractOutside?.(event)
+        }}
+        onPointerDownOutside={(event) => {
+          keepPlacesSuggestionClicks(event)
+          onPointerDownOutside?.(event)
+        }}
       >
         <span
           className={cn(

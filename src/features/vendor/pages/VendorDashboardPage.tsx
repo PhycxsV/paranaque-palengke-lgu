@@ -11,7 +11,6 @@ import {
   Package,
   ShoppingCart,
   Sparkles,
-  Star,
   TriangleAlert,
   XCircle,
 } from 'lucide-react'
@@ -27,7 +26,6 @@ import { cn, formatDateTime, formatPeso } from '@/lib/utils'
 import { useBranchStore } from '@/stores/branch-store'
 import { useChatStore } from '@/stores/chat-store'
 import { useSessionStore } from '@/stores/session-reset-store'
-import { summarizeFeedback, useFeedbackStore } from '@/stores/feedback-store'
 import { useOfferStore } from '@/stores/offer-store'
 import { useOrderStore } from '@/stores/order-store'
 import { useProductStore } from '@/stores/product-store'
@@ -61,12 +59,6 @@ export default function VendorDashboardPage() {
   const products = useProductStore((s) => s.products)
   const chatThreads = useChatStore((s) => s.threads)
   const chatMessages = useChatStore((s) => s.messages)
-  const allFeedback = useFeedbackStore((s) => s.feedback)
-  const reviewSummary = useMemo(
-    () => summarizeFeedback(allFeedback.filter((f) => f.vendorId === activeVendorId)),
-    [allFeedback, activeVendorId],
-  )
-
   const vendorOrders = useMemo<Order[]>(
     () => getOrdersByVendor(activeVendorId),
     [getOrdersByVendor, activeVendorId],
@@ -84,7 +76,7 @@ export default function VendorDashboardPage() {
         (o) => o.status === 'awaiting_vendor_confirmation',
       ).length,
       confirmed: confirmedOrders.length,
-      sales: confirmedOrders.reduce((sum, o) => sum + o.total, 0),
+      sales: confirmedOrders.reduce((sum, o) => sum + o.subtotal, 0),
       rejected: vendorOrders.filter((o) => o.status === 'payment_rejected')
         .length,
       pendingOffers: vendorOffers.filter((o) => o.status === 'pending').length,
@@ -183,18 +175,6 @@ export default function VendorDashboardPage() {
               {vendor?.name ?? 'Vendor'}
             </h1>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold sm:mt-4">
-              {reviewSummary.count > 0 ? (
-                <Link
-                  to="/vendor/feedback"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-primary-deep transition active:scale-95"
-                >
-                  <Star className="h-3.5 w-3.5 fill-primary-deep" />
-                  {reviewSummary.average.toFixed(1)}
-                  <span className="font-medium opacity-80">
-                    · {reviewSummary.count} review{reviewSummary.count === 1 ? '' : 's'}
-                  </span>
-                </Link>
-              ) : null}
               <span
                 className={cn(
                   'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5',
@@ -330,7 +310,7 @@ export default function VendorDashboardPage() {
                     <div className="flex flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-4">
                       <StatusBadge status={order.status} />
                       <span className="text-sm font-extrabold text-primary-deep">
-                        {formatPeso(order.total)}
+                        {formatPeso(order.subtotal)}
                       </span>
                     </div>
                   </Link>

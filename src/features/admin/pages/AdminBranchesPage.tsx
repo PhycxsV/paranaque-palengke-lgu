@@ -74,7 +74,8 @@ function BranchFormFields({
         onPlaceSelected={({ address, lat, lng }) =>
           setForm({
             ...form,
-            address: form.address.trim() ? form.address : address,
+            // Market pin is fixed — Find place just fills address + lat/lng.
+            address,
             lat,
             lng,
           })

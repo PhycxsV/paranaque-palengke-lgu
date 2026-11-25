@@ -8,7 +8,6 @@ import {
   LogOut,
   MapPinned,
   Menu,
-  MessageSquareHeart,
   Store,
   UserRound,
   X,
@@ -34,7 +33,6 @@ const links = [
   { to: '/admin/vendors', label: 'Stores', icon: Store },
   { to: '/admin/offers', label: 'Offers', icon: HandCoins },
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList },
-  { to: '/admin/feedback', label: 'Feedback', icon: MessageSquareHeart },
 ].filter((link) => FEATURE_TAWAD_ENABLED || link.to !== '/admin/offers')
 
 function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {

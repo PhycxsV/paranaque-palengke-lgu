@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import { FEATURE_TAWAD_ENABLED } from '@/constants'
 import '@/stores/text-size-store'
 import { useBackendSync } from '@/hooks/useBackendSync'
+import { useIdleLogout } from '@/hooks/useIdleLogout'
 import { RequireAuth } from '@/components/shared/RequireAuth'
 import AdminLayout from '@/features/admin/layouts/AdminLayout'
 import AuthPage from '@/features/auth/AuthPage'
@@ -16,11 +17,11 @@ import AdminUsersPage from '@/features/admin/pages/AdminUsersPage'
 import AdminUserDetailPage from '@/features/admin/pages/AdminUserDetailPage'
 import AdminOffersPage from '@/features/admin/pages/AdminOffersPage'
 import AdminOrdersPage from '@/features/admin/pages/AdminOrdersPage'
-import AdminFeedbackPage from '@/features/admin/pages/AdminFeedbackPage'
 import NotFoundPage from '@/features/customer/pages/NotFoundPage'
 
 function AppShell() {
   const { catalogReady, catalogError, apiConfigured } = useBackendSync()
+  useIdleLogout()
 
   if (apiConfigured && !catalogReady) {
     return (
@@ -69,7 +70,6 @@ function AppShell() {
             }
           />
           <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="feedback" element={<AdminFeedbackPage />} />
         </Route>
 
         <Route index element={<Navigate to="/admin" replace />} />

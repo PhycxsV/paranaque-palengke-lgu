@@ -145,6 +145,7 @@ export interface StrapiOrder {
   transactionReference?: string
   paymentSubmittedAt?: string
   keriTrackingId?: string
+  podUrl?: string | null
   pickupCode?: string
   createdAt?: string
   updatedAt?: string
@@ -176,9 +177,19 @@ function num(value: number | string | null | undefined, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback
 }
 
-export function relationId(value: StrapiRelation<{ documentId?: string }> | undefined): string {
-  if (!value || typeof value !== 'object') return ''
-  return value.documentId ?? ''
+export function relationId(
+  value: StrapiRelation<{ documentId?: string }> | string | number | undefined,
+): string {
+  if (value == null || value === '') return ''
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value !== 'object') return ''
+  if ('documentId' in value && value.documentId) return String(value.documentId)
+  // Older Strapi shape: { data: { documentId } }
+  const nested = (value as { data?: { documentId?: string } | null }).data
+  if (nested && typeof nested === 'object' && nested.documentId) {
+    return String(nested.documentId)
+  }
+  return ''
 }
 
 /** Normalizes API time values to `HH:mm`. */
@@ -335,6 +346,7 @@ export function mapOrder(raw: StrapiOrder): Order {
     transactionReference: raw.transactionReference || undefined,
     paymentSubmittedAt: raw.paymentSubmittedAt || undefined,
     keriTrackingId: raw.keriTrackingId || undefined,
+    podUrl: raw.podUrl?.trim() || undefined,
     pickupCode: raw.pickupCode || undefined,
   }
 }

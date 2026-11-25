@@ -364,3 +364,44 @@ export async function createVendorAccount(input: {
     vendorIds: payload.data.vendorIds ?? input.vendorIds,
   }
 }
+
+export async function updateVendorAccount(
+  userId: string,
+  input: {
+    name?: string
+    email?: string
+    phone?: string
+    password?: string
+    isActive?: boolean
+  },
+): Promise<VendorUser & { vendorIds: string[] }> {
+  const body: Record<string, unknown> = {}
+  if (input.name !== undefined) body.name = input.name.trim()
+  if (input.email !== undefined) body.email = input.email.trim().toLowerCase()
+  if (input.phone !== undefined) body.phone = input.phone.trim()
+  if (input.password !== undefined) body.password = input.password
+  if (input.isActive !== undefined) body.isActive = input.isActive
+
+  const payload = await apiRequest<{
+    data: {
+      documentId: string
+      name?: string
+      email?: string
+      phone?: string
+      isActive?: boolean
+      vendorIds?: string[]
+    }
+  }>(`/lgu/vendor-accounts/${userId}`, {
+    method: 'PUT',
+    body,
+  })
+  return {
+    id: payload.data.documentId,
+    name: payload.data.name ?? input.name ?? '',
+    email: payload.data.email ?? input.email ?? '',
+    phone: payload.data.phone ?? input.phone ?? '',
+    password: '',
+    isActive: payload.data.isActive ?? input.isActive ?? true,
+    vendorIds: payload.data.vendorIds ?? [],
+  }
+}

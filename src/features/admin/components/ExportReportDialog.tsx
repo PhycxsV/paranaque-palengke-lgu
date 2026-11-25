@@ -38,7 +38,6 @@ import {
 import type { ExportFormat } from '@/lib/report-export'
 import { cn, formatPeso } from '@/lib/utils'
 import { useBranchStore } from '@/stores/branch-store'
-import { useFeedbackStore } from '@/stores/feedback-store'
 import { useVendorStore } from '@/stores/vendor-store'
 import type { Order } from '@/types'
 
@@ -81,7 +80,7 @@ const FORMATS: {
   {
     value: 'xlsx',
     title: 'Excel (.xlsx)',
-    hint: 'Summary, orders, line items and feedback on separate sheets.',
+    hint: 'Summary, orders, and line items on separate sheets.',
     icon: FileSpreadsheet,
   },
   {
@@ -123,7 +122,6 @@ function ExportForm({
 }) {
   const vendors = useVendorStore((s) => s.vendors)
   const branches = useBranchStore((s) => s.branches)
-  const feedback = useFeedbackStore((s) => s.feedback)
 
   const today = useMemo(() => rangeFor(0, 1), [])
   const [from, setFrom] = useState(today.from)
@@ -192,9 +190,7 @@ function ExportForm({
       const result = exportEndOfDayReport(format, {
         orders: scoped,
         vendors: inScopeVendors,
-        feedback: feedback.filter((f) =>
-          inScopeVendors.some((v) => v.id === f.vendorId),
-        ),
+        feedback: [],
         from: fromDate,
         to: toDate,
         generatedAt: new Date(),

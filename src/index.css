@@ -344,7 +344,12 @@
   background: transparent;
 }
 
-/* Places suggestion list sits above page chrome. */
+/*
+ * Places suggestions are appended to <body>, outside Radix dialogs.
+ * Without this, the map eats the clicks (pointer-events none on body
+ * while a modal is open) and the list can paint under the map.
+ */
 .pac-container {
-  z-index: 10000;
+  z-index: 100000 !important;
+  pointer-events: auto !important;
 }

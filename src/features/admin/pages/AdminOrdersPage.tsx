@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FilterTabs, type FilterTabItem } from '@/components/shared/FilterTabs'
 import { PortalHeader } from '@/components/shared/PortalHeader'
+import { ProofOfDeliveryButton } from '@/components/shared/ProofOfDeliveryButton'
 import { StatCard } from '@/components/shared/StatCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Badge } from '@/components/ui/badge'
@@ -434,6 +435,12 @@ export default function AdminOrdersPage() {
                             PIN {order.pickupCode}
                           </Badge>
                         ) : null}
+                        {order.podUrl ? (
+                          <ProofOfDeliveryButton
+                            podUrl={order.podUrl}
+                            className="mt-0.5"
+                          />
+                        ) : null}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5 text-xs text-muted">
@@ -486,7 +493,12 @@ export default function AdminOrdersPage() {
                   {itemSummary(order)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-                  <StatusBadge status={order.status} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={order.status} />
+                    {order.podUrl ? (
+                      <ProofOfDeliveryButton podUrl={order.podUrl} />
+                    ) : null}
+                  </div>
                   <span className="text-[11px] text-muted">
                     <span className="font-mono">{order.id}</span> ·{' '}
                     {formatDateTime(order.createdAt)}

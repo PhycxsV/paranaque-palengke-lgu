@@ -6,7 +6,6 @@ import {
   HandCoins,
   LayoutDashboard,
   MessageCircle,
-  MessageSquareHeart,
   MoreHorizontal,
   Package,
   Store,
@@ -219,7 +218,6 @@ function MoreSheet({
   const close = () => onOpenChange(false)
 
   const links: { to: string; label: string; hint: string; icon: LucideIcon }[] = [
-    { to: '/vendor/feedback', label: 'Feedback', hint: 'Customer reviews', icon: MessageSquareHeart },
     { to: '/vendor/store', label: 'Store profile', hint: 'Hours & details', icon: Store },
     ...(FEATURE_TAWAD_ENABLED
       ? [{ to: '/vendor/offers', label: 'Offers', hint: 'Price offers', icon: HandCoins }]
@@ -304,7 +302,7 @@ export function VendorLayout() {
     (s) => s.vendors.find((v) => v.id === activeVendorId)?.name,
   )
 
-  const moreActive = ['/vendor/feedback', '/vendor/store', '/vendor/offers'].some(
+  const moreActive = ['/vendor/store', '/vendor/offers'].some(
     (path) => location.pathname.startsWith(path),
   )
 

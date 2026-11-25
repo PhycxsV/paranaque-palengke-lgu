@@ -146,6 +146,13 @@ export const useProductStore = create<ProductState>()(
     }),
     {
       name: `${STORAGE_PREFIX}-products`,
+      partialize: (state) =>
+        isApiConfigured() ? {} : { products: state.products },
+      merge: (persisted, current) => {
+        if (isApiConfigured()) return { ...current }
+        const p = persisted as Partial<{ products: typeof current.products }> | undefined
+        return { ...current, ...p }
+      },
     },
   ),
 )

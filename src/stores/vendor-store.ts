@@ -108,7 +108,13 @@ export const useVendorStore = create<VendorState>()(
 
         if (isApiConfigured()) {
           try {
-            const vendor = await createVendor(input)
+            const created = await createVendor(input)
+            const vendor: Vendor = {
+              ...created,
+              ownerUserId:
+                created.ownerUserId || input.ownerUserId || '',
+              branchId: created.branchId || input.branchId,
+            }
             set({ vendors: [vendor, ...get().vendors] })
             return { ok: true, vendor }
           } catch (err) {
@@ -155,9 +161,33 @@ export const useVendorStore = create<VendorState>()(
         if (isApiConfigured()) {
           try {
             const vendor = await updateVendorApi(vendorId, input)
+            // PUT body can omit documentId / owner / branch. Start from the
+            // store we already have so the detail page never flickers to
+            // "Store not found" after lipatan.
+            const merged: Vendor = {
+              ...current,
+              ...vendor,
+              id: vendorId,
+              ownerUserId:
+                vendor.ownerUserId ||
+                input.ownerUserId ||
+                current.ownerUserId,
+              branchId:
+                vendor.branchId || input.branchId || current.branchId,
+              rating:
+                input.rating !== undefined
+                  ? Number(input.rating.toFixed(1))
+                  : vendor.rating || current.rating,
+              name: vendor.name || current.name,
+              description: vendor.description || current.description,
+              location: vendor.location || current.location,
+              categories: vendor.categories?.length
+                ? vendor.categories
+                : current.categories,
+            }
             set({
               vendors: get().vendors.map((v) =>
-                v.id === vendorId ? vendor : v,
+                v.id === vendorId ? merged : v,
               ),
             })
             return { ok: true }
@@ -216,7 +246,10 @@ export const useVendorStore = create<VendorState>()(
     }),
     {
       name: `${STORAGE_PREFIX}-vendors`,
+      partialize: (state) =>
+        isApiConfigured() ? {} : { vendors: state.vendors },
       merge: (persisted, current) => {
+        if (isApiConfigured()) return { ...current }
         const state = (persisted ?? {}) as Partial<VendorState>
         const list = Array.isArray(state.vendors) ? state.vendors : current.vendors
         return {

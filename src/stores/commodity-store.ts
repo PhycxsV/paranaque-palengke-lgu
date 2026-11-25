@@ -196,6 +196,20 @@ export const useCommodityStore = create<CommodityState>()(
     }),
     {
       name: `${STORAGE_PREFIX}-commodities`,
+      // API mode: catalog comes from Strapi. Don't rehydrate a stale local
+      // copy that can wipe commodities after create + refresh.
+      partialize: (state) =>
+        isApiConfigured()
+          ? {}
+          : {
+              commodities: state.commodities,
+              priceHistory: state.priceHistory,
+            },
+      merge: (persisted, current) => {
+        if (isApiConfigured()) return { ...current }
+        const p = persisted as Partial<CommodityState> | undefined
+        return { ...current, ...p }
+      },
     },
   ),
 )
