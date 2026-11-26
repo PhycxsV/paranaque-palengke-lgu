@@ -60,6 +60,7 @@ const TAB_DEFS: { value: StatusFilter; label: string }[] = [
   { value: 'pending_payment', label: ORDER_STATUS_LABELS.pending_payment },
   { value: 'confirmed', label: ORDER_STATUS_LABELS.confirmed },
   { value: 'payment_rejected', label: ORDER_STATUS_LABELS.payment_rejected },
+  { value: 'cancelled', label: ORDER_STATUS_LABELS.cancelled },
 ]
 
 function itemSummary(order: Order) {
