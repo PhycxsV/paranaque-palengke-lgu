@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { PhotoUploadField } from '@/components/shared/PhotoUploadField'
 import { useCommodityStore } from '@/stores/commodity-store'
 import { formatPeso, formatDateTime } from '@/lib/utils'
 import type { Commodity, CommodityFormInput, ProductCategory, ProductUnit } from '@/types'
@@ -56,9 +57,13 @@ function AddCommodityDialog() {
   const addCommodity = useCommodityStore((s) => s.addCommodity)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<CommodityFormInput>(DEFAULT_FORM)
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   const handleOpen = (isOpen: boolean) => {
-    if (isOpen) setForm(DEFAULT_FORM)
+    if (isOpen) {
+      setForm(DEFAULT_FORM)
+      setImageFile(null)
+    }
     setOpen(isOpen)
   }
 
@@ -67,9 +72,12 @@ function AddCommodityDialog() {
       ...form,
       priceMin: Number(form.priceMin),
       priceMax: Number(form.priceMax),
-    })
+    }, imageFile)
     if (result.ok) {
       toast.success(`Added commodity ${result.commodity.name}`)
+      if (result.photoError) {
+        toast.warning(`Commodity saved, but the photo was not uploaded: ${result.photoError}`)
+      }
       setOpen(false)
     } else {
       toast.error(result.message)
@@ -192,14 +200,15 @@ function AddCommodityDialog() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="add-image">Image URL</Label>
-            <Input
-              id="add-image"
-              value={form.imageUrl}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, imageUrl: e.target.value }))
+            <Label>Commodity photo</Label>
+            <PhotoUploadField
+              subject="commodity"
+              file={imageFile}
+              onFileChange={setImageFile}
+              imageUrl={form.imageUrl}
+              onImageUrlChange={(value) =>
+                setForm((f) => ({ ...f, imageUrl: value }))
               }
-              placeholder="https://..."
             />
           </div>
           <div className="flex items-center gap-3">
@@ -227,6 +236,8 @@ function AddCommodityDialog() {
 
 function EditPriceDialog({ commodity }: { commodity: Commodity }) {
   const updatePriceRange = useCommodityStore((s) => s.updatePriceRange)
+  const uploadPhoto = useCommodityStore((s) => s.uploadPhoto)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [open, setOpen] = useState(false)
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
@@ -239,6 +250,7 @@ function EditPriceDialog({ commodity }: { commodity: Commodity }) {
       setPriceMax(String(commodity.priceMax))
       setEffectiveFrom(new Date().toISOString().slice(0, 10))
       setNote('')
+      setPhotoFile(null)
     }
     setOpen(isOpen)
   }
@@ -246,6 +258,21 @@ function EditPriceDialog({ commodity }: { commodity: Commodity }) {
   const handleSave = async () => {
     const parsedMin = parseFloat(priceMin)
     const parsedMax = parseFloat(priceMax)
+    const priceUnchanged =
+      parsedMin === commodity.priceMin && parsedMax === commodity.priceMax
+
+    // Photo-only change: don't create a price history entry.
+    if (photoFile && priceUnchanged) {
+      const photoResult = await uploadPhoto(commodity.id, photoFile)
+      if (photoResult.ok) {
+        toast.success(`Updated photo for ${commodity.name}`)
+        setOpen(false)
+      } else {
+        toast.error(photoResult.message)
+      }
+      return
+    }
+
     const result = await updatePriceRange({
       commodityId: commodity.id,
       priceMin: parsedMin,
@@ -257,6 +284,12 @@ function EditPriceDialog({ commodity }: { commodity: Commodity }) {
       toast.success(
         `Updated ${commodity.name} to ${formatRange(parsedMin, parsedMax)}`,
       )
+      if (photoFile) {
+        const photoResult = await uploadPhoto(commodity.id, photoFile)
+        if (!photoResult.ok) {
+          toast.warning(`Price saved, but the photo was not uploaded: ${photoResult.message}`)
+        }
+      }
       setOpen(false)
     } else {
       toast.error(result.message)
@@ -273,9 +306,9 @@ function EditPriceDialog({ commodity }: { commodity: Commodity }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Update Price Range</DialogTitle>
+          <DialogTitle>Edit commodity</DialogTitle>
           <DialogDescription>
-            Set a new LGU price range for {commodity.name} (/{commodity.unit}).
+            Set a new LGU price range or change the photo for {commodity.name} (/{commodity.unit}).
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
@@ -320,6 +353,17 @@ function EditPriceDialog({ commodity }: { commodity: Commodity }) {
               placeholder="Reason for price change…"
               value={note}
               onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Photo</Label>
+            <PhotoUploadField
+              subject="commodity"
+              file={photoFile}
+              onFileChange={setPhotoFile}
+              imageUrl={commodity.imageUrl}
+              onImageUrlChange={() => {}}
+              allowLink={false}
             />
           </div>
         </div>

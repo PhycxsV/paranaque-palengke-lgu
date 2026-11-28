@@ -7,6 +7,7 @@ import {
   fetchPriceHistory,
   isApiConfigured,
   updateCommodityPriceRange,
+  uploadCommodityImage,
 } from '@/lib/api'
 import { generateId } from '@/lib/utils'
 import type { Commodity, CommodityFormInput, PriceHistoryEntry } from '@/types'
@@ -14,9 +15,18 @@ import type { Commodity, CommodityFormInput, PriceHistoryEntry } from '@/types'
 interface CommodityState {
   commodities: Commodity[]
   priceHistory: PriceHistoryEntry[]
+  /** `photoError` is set when the commodity saved but its photo failed to upload. */
   addCommodity: (
     input: CommodityFormInput,
-  ) => Promise<{ ok: true; commodity: Commodity } | { ok: false; message: string }>
+    imageFile?: File | null,
+  ) => Promise<
+    | { ok: true; commodity: Commodity; photoError?: string }
+    | { ok: false; message: string }
+  >
+  uploadPhoto: (
+    commodityId: string,
+    file: File,
+  ) => Promise<{ ok: true } | { ok: false; message: string }>
   updatePriceRange: (input: {
     commodityId: string
     priceMin: number
@@ -32,7 +42,7 @@ export const useCommodityStore = create<CommodityState>()(
     (set, get) => ({
       commodities: isApiConfigured() ? [] : seedCommodities,
       priceHistory: [],
-      addCommodity: async (input) => {
+      addCommodity: async (input, imageFile) => {
         const name = input.name.trim()
         const description = input.description.trim()
         const imageUrl = input.imageUrl.trim()
@@ -51,15 +61,33 @@ export const useCommodityStore = create<CommodityState>()(
         if (input.priceMin > input.priceMax) {
           return { ok: false, message: 'Min price cannot exceed max price.' }
         }
-        if (!imageUrl) {
-          return { ok: false, message: 'Image URL is required.' }
+        const hasUploadablePhoto = Boolean(imageFile) && isApiConfigured()
+        if (!imageUrl && !hasUploadablePhoto) {
+          return { ok: false, message: 'Upload a photo or enter an image URL.' }
         }
 
         if (isApiConfigured()) {
           try {
-            const commodity = await createCommodity(input)
+            let commodity = await createCommodity(input)
             set({ commodities: [commodity, ...get().commodities] })
-            return { ok: true, commodity }
+            let photoError: string | undefined
+            if (imageFile) {
+              try {
+                const uploadedUrl = await uploadCommodityImage(commodity.id, imageFile)
+                commodity = { ...commodity, imageUrl: uploadedUrl }
+                set({
+                  commodities: get().commodities.map((c) =>
+                    c.id === commodity.id ? commodity : c,
+                  ),
+                })
+              } catch (error) {
+                photoError =
+                  error instanceof Error
+                    ? error.message
+                    : 'The photo could not be uploaded.'
+              }
+            }
+            return { ok: true, commodity, photoError }
           } catch (error) {
             return {
               ok: false,
@@ -94,6 +122,28 @@ export const useCommodityStore = create<CommodityState>()(
 
         set({ commodities: [commodity, ...get().commodities] })
         return { ok: true, commodity }
+      },
+      uploadPhoto: async (commodityId, file) => {
+        if (!isApiConfigured()) {
+          return { ok: false, message: 'Photo upload needs the API connection.' }
+        }
+        try {
+          const imageUrl = await uploadCommodityImage(commodityId, file)
+          set({
+            commodities: get().commodities.map((c) =>
+              c.id === commodityId ? { ...c, imageUrl } : c,
+            ),
+          })
+          return { ok: true }
+        } catch (error) {
+          return {
+            ok: false,
+            message:
+              error instanceof Error
+                ? error.message
+                : 'The photo could not be uploaded.',
+          }
+        }
       },
       updatePriceRange: async ({
         commodityId,

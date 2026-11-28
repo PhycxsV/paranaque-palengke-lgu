@@ -4,6 +4,7 @@ import { FEATURE_TAWAD_ENABLED } from '@/constants'
 import '@/stores/text-size-store'
 import { useBackendSync } from '@/hooks/useBackendSync'
 import { useIdleLogout } from '@/hooks/useIdleLogout'
+import { BrandLoader } from '@/components/shared/BrandLoader'
 import { RequireAuth } from '@/components/shared/RequireAuth'
 import AdminLayout from '@/features/admin/layouts/AdminLayout'
 import AuthPage from '@/features/auth/AuthPage'
@@ -24,11 +25,7 @@ function AppShell() {
   useIdleLogout()
 
   if (apiConfigured && !catalogReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-warm-white text-sm text-muted-foreground">
-        Connecting to Palengke API…
-      </div>
-    )
+    return <BrandLoader fullScreen label="Loading Palengke" />
   }
 
   return (
